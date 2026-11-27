@@ -39,9 +39,16 @@ function looksLikeUrl(value) {
 // ── UI helpers ───────────────────────────────────────────────────────────────
 function setLoading(on) {
   btnAnalyse.disabled = on;
-  btnText.hidden      = on;
-  btnSpinner.hidden   = !on;
-  urlInput.disabled   = on;
+  btnText.hidden = false;
+  btnText.textContent = on ? "Analysing..." : "Analyse";
+  btnSpinner.hidden = !on;
+  urlInput.disabled = on;
+
+  if (on) {
+    btnAnalyse.classList.add("is-loading");
+  } else {
+    btnAnalyse.classList.remove("is-loading");
+  }
 }
 
 function showError(msg) {
@@ -173,6 +180,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   setLoading(true);
+  const loadingStart = Date.now();
 
   try {
     const data = await analyseUrl(raw);
@@ -187,8 +195,13 @@ form.addEventListener("submit", async (event) => {
     showError("Could not reach the server. Is Flask running?");
     console.error("Analysis error:", err);
   } finally {
-    setLoading(false);
-  }
+  const elapsed = Date.now() - loadingStart;
+  const remaining = Math.max(0, 1200 - elapsed);
+
+  await new Promise(resolve => setTimeout(resolve, remaining));
+
+  setLoading(false);
+}
 });
 
 // ── Clear error on re-type ───────────────────────────────────────────────────
